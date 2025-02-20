@@ -1,17 +1,10 @@
 import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
-import { registerUserSchema, loginUserSchema, withdrawalRequestSchema } from "@shared/schema";
+import { registerUserSchema, type RegisterUser, loginUserSchema, withdrawalRequestSchema } from "@shared/schema";
 import { z } from "zod";
 import { getMemberCount } from "./helper";
-
-// Add notification schema
-const notificationSchema = z.object({
-  userId: z.number(),
-  subject: z.string(),
-  message: z.string(),
-  htmlContent: z.string(),
-});
+import { auth } from "./firebase-admin";
 
 declare module "express-session" {
   interface SessionData {
@@ -73,31 +66,42 @@ export async function registerRoutes(app: Express) {
   // User registration
   app.post("/api/register", async (req, res) => {
     try {
+      // First validate the request body
       const userData = registerUserSchema.parse(req.body);
+      const { firebaseUid, ...userDataWithoutFirebaseId } = userData;
 
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(userData.email) ||
                         await storage.getUserByUsername(userData.username);
 
       if (existingUser) {
-        res.status(400).json({
+        return res.status(400).json({
           message: existingUser.email === userData.email ?
             "Email already registered" :
             "Username already taken"
         });
-        return;
+      }
+
+      // Verify Firebase token if provided
+      if (firebaseUid) {
+        try {
+          await auth.getUser(firebaseUid);
+        } catch (error) {
+          console.error('Firebase auth error:', error);
+          return res.status(401).json({ message: "Invalid Firebase authentication" });
+        }
       }
 
       // Check referral code if provided
       if (userData.referredBy) {
         const referrer = await storage.getUserByReferralCode(userData.referredBy);
         if (!referrer) {
-          res.status(400).json({ message: "Invalid referral code" });
-          return;
+          return res.status(400).json({ message: "Invalid referral code" });
         }
       }
 
-      const user = await storage.createUser(userData);
+      // Create user in database
+      const user = await storage.createUser(userDataWithoutFirebaseId);
 
       // Create welcome notification
       await storage.createNotification({
@@ -124,15 +128,23 @@ export async function registerRoutes(app: Express) {
         read: false,
       });
 
+      // Set session
       req.session.userId = user.id;
+
+      // Return user data
       res.status(201).json(user);
     } catch (error) {
+      console.error('Registration error:', error);
       if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid user data", errors: error.errors });
-      } else {
-        console.error('Registration error:', error);
-        res.status(400).json({ message: (error as Error).message });
+        return res.status(400).json({ 
+          message: "Invalid user data", 
+          errors: error.errors 
+        });
       }
+      return res.status(500).json({ 
+        message: "Internal server error", 
+        error: (error as Error).message 
+      });
     }
   });
 
@@ -268,22 +280,9 @@ export async function registerRoutes(app: Express) {
     res.json(usersMap);
   });
 
-  // Update getMembers endpoint to use referrals
-  app.get("/api/members", isAuthenticated, async (req, res) => {
-    try {
-      const users = await storage.getUsers();
-      const currentUser = await storage.getUser(req.session.userId!);
-      if (!currentUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // Filter users to only get referrals
-      const referrals = users.filter(u => u.referredBy === currentUser.referralCode);
-      res.json(referrals);
-    } catch (error) {
-      console.error('Error getting members:', error);
-      res.status(500).json({ message: "Failed to get members" });
-    }
+  app.get("/api/members", async (req, res) => {
+    const members = await storage.getMembers();
+    res.json(members);
   });
 
   // User withdrawal routes
@@ -309,7 +308,9 @@ export async function registerRoutes(app: Express) {
       const withdrawal = await storage.createWithdrawalRequest({
         userId: req.session.userId!,
         amount: data.amount,
-        upiId: data.upiId
+        upiId: data.upiId,
+        status: "pending",
+        createdAt: new Date().toISOString(),
       });
 
       // Update user balance

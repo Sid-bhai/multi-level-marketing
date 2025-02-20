@@ -1,18 +1,19 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDa-2F7vY8zWFRd6aw7xMORgdlhmMjwtsI",
-  authDomain: "mlm-web-f2466.firebaseapp.com",
-  projectId: "mlm-web-f2466",
-  storageBucket: "mlm-web-f2466.firebasestorage.app",
-  messagingSenderId: "1991205853",
-  appId: "1:1991205853:web:132b70249cc33a0b340c34",
-  measurementId: "G-TYX0JEH2DR"
+  apiKey: "AIzaSyCPmcb1r2o39RSvqqFes5r_xwlf4kdcLUU",
+  authDomain: "multi-level-b5601.firebaseapp.com",
+  projectId: "multi-level-b5601",
+  storageBucket: "multi-level-b5601.appspot.com", // Corrected storage bucket
+  messagingSenderId: "25101586540",
+  appId: "1:25101586540:web:ef64543c3ffb8f9008c849",
+  measurementId: "G-HQ7PR8CB35"
 };
 
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only if no apps exist
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 const auth = getAuth(app);
 const analytics = getAnalytics(app);
 const googleProvider = new GoogleAuthProvider();
@@ -22,6 +23,7 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
+// Sign in with email/password
 export async function signInWithEmailPassword(email: string, password: string) {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -49,6 +51,7 @@ export async function signInWithEmailPassword(email: string, password: string) {
   }
 }
 
+// Register with email/password
 export async function registerWithEmailPassword(email: string, password: string) {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -60,6 +63,7 @@ export async function registerWithEmailPassword(email: string, password: string)
   }
 }
 
+// Sign in with Google
 export async function signInWithGoogle() {
   try {
     const result = await signInWithPopup(auth, googleProvider);

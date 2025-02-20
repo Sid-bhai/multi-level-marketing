@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { registerUserSchema, type RegisterUser } from "@shared/schema";
+import { insertMemberSchema, type InsertMember } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -11,24 +11,29 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MemberFormProps {
-  referredBy?: string;
-  onSubmit: (data: RegisterUser) => void;
+  parentId?: number;
+  onSubmit: (data: InsertMember) => void;
   isSubmitting?: boolean;
 }
 
-export default function MemberForm({ referredBy, onSubmit, isSubmitting }: MemberFormProps) {
-  const form = useForm<RegisterUser>({
-    resolver: zodResolver(registerUserSchema),
+export default function MemberForm({ parentId, onSubmit, isSubmitting }: MemberFormProps) {
+  const form = useForm<InsertMember>({
+    resolver: zodResolver(insertMemberSchema),
     defaultValues: {
+      parentId: parentId,
+      position: undefined,
       name: "",
-      username: "",
       email: "",
-      password: "",
       phone: "",
-      state: "",
-      referredBy: referredBy,
     },
   });
 
@@ -41,20 +46,6 @@ export default function MemberForm({ referredBy, onSubmit, isSubmitting }: Membe
           render={({ field }) => (
             <FormItem>
               <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -79,20 +70,6 @@ export default function MemberForm({ referredBy, onSubmit, isSubmitting }: Membe
 
         <FormField
           control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
           name="phone"
           render={({ field }) => (
             <FormItem>
@@ -105,19 +82,32 @@ export default function MemberForm({ referredBy, onSubmit, isSubmitting }: Membe
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="state"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>State</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {parentId && (
+          <FormField
+            control={form.control}
+            name="position"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Position</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select position" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Adding..." : "Add Member"}

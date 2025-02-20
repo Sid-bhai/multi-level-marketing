@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, IndianRupee } from "lucide-react";
-import type { WithdrawalRequest, User } from "@shared/schema";
+import type { WithdrawalRequest } from "@shared/schema";
 import { withdrawalRequestSchema } from "@shared/schema";
 import { format } from "date-fns";
 import { queryClient } from "@/lib/queryClient";
@@ -17,7 +17,7 @@ export default function Withdraw() {
   const { toast } = useToast();
 
   // Get user data including balance
-  const { data: user } = useQuery<User>({
+  const { data: user } = useQuery({
     queryKey: ["/api/user"],
   });
 
@@ -110,8 +110,6 @@ export default function Withdraw() {
                           type="number"
                           {...field}
                           onChange={(e) => field.onChange(Number(e.target.value))}
-                          min={1000}
-                          step={100}
                         />
                       </FormControl>
                       <FormMessage />

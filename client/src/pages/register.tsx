@@ -81,7 +81,7 @@ export default function Register() {
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);
     try {
-      // Create Firebase user
+      // Create Firebase user first
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         data.email,
@@ -89,12 +89,14 @@ export default function Register() {
       );
 
       const firebaseUser = userCredential.user;
+      const idToken = await firebaseUser.getIdToken();
 
       // Register user in our backend
       const response = await fetch("/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
         },
         body: JSON.stringify({
           ...data,
@@ -105,6 +107,8 @@ export default function Register() {
 
       if (!response.ok) {
         const error = await response.json();
+        // If backend registration failed, delete Firebase user
+        await firebaseUser.delete();
         throw new Error(error.message || "Registration failed");
       }
 
@@ -114,22 +118,16 @@ export default function Register() {
         description: "Successfully registered! Welcome to our platform.",
       });
 
-      // Show notification toast
-      toast({
-        title: "New Notification",
-        description: "You have a welcome message in your notifications!",
-      });
-
       navigate("/dashboard");
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Registration failed",
         variant: "destructive",
       });
 
-      // If backend registration failed, delete Firebase user
+      // Clean up Firebase user if it exists and backend registration failed
       if (auth.currentUser) {
         await auth.currentUser.delete();
       }
