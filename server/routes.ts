@@ -5,6 +5,14 @@ import { registerUserSchema, loginUserSchema, withdrawalRequestSchema } from "@s
 import { z } from "zod";
 import { getMemberCount } from "./helper";
 
+// Add notification schema
+const notificationSchema = z.object({
+  userId: z.number(),
+  subject: z.string(),
+  message: z.string(),
+  htmlContent: z.string(),
+});
+
 declare module "express-session" {
   interface SessionData {
     userId: number;
@@ -260,9 +268,22 @@ export async function registerRoutes(app: Express) {
     res.json(usersMap);
   });
 
-  app.get("/api/members", async (req, res) => {
-    const members = await storage.getMembers();
-    res.json(members);
+  // Update getMembers endpoint to use referrals
+  app.get("/api/members", isAuthenticated, async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      const currentUser = await storage.getUser(req.session.userId!);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Filter users to only get referrals
+      const referrals = users.filter(u => u.referredBy === currentUser.referralCode);
+      res.json(referrals);
+    } catch (error) {
+      console.error('Error getting members:', error);
+      res.status(500).json({ message: "Failed to get members" });
+    }
   });
 
   // User withdrawal routes
@@ -288,9 +309,7 @@ export async function registerRoutes(app: Express) {
       const withdrawal = await storage.createWithdrawalRequest({
         userId: req.session.userId!,
         amount: data.amount,
-        upiId: data.upiId,
-        status: "pending",
-        createdAt: new Date().toISOString(),
+        upiId: data.upiId
       });
 
       // Update user balance

@@ -1,27 +1,19 @@
-import type { Member, TreeNode, User } from "@shared/schema";
+import type { Member, ReferralNode, User } from "@shared/schema";
 
-export async function buildTree(members: Member[], fetchUser: (id: number) => Promise<User>): Promise<TreeNode | null> {
+export async function buildTree(members: Member[], fetchUser: (id: number) => Promise<User>): Promise<ReferralNode | null> {
   if (!members.length) return null;
 
-  // Find root node (member with no parent)
-  const root = members.find(m => !m.parentId);
+  // Find root node (member who wasn't referred by anyone)
+  const root = members.find(m => !m.referredId);
   if (!root) return null;
 
-  async function buildNode(member: Member): Promise<TreeNode> {
-    const user = await fetchUser(member.userId);
-    const children = members.filter(m => m.parentId === member.id);
+  async function buildNode(member: Member): Promise<ReferralNode> {
+    const user = await fetchUser(member.referrerId);
+    const referrals = members.filter(m => m.referrerId === member.id);
 
     return {
-      ...member,
       user,
-      children: {
-        left: children.find(c => c.position === "left")
-          ? await buildNode(children.find(c => c.position === "left")!)
-          : undefined,
-        right: children.find(c => c.position === "right")
-          ? await buildNode(children.find(c => c.position === "right")!)
-          : undefined
-      }
+      referrals: await Promise.all(referrals.map(buildNode))
     };
   }
 

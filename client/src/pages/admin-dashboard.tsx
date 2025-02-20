@@ -7,6 +7,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -257,7 +259,7 @@ export default function AdminDashboard() {
                       id="notification-text"
                       placeholder="Enter notification message with HTML formatting..."
                       value={notificationText}
-                      onChange={(e) => setNotificationText(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotificationText(e.target.value)}
                       className="h-[200px]"
                     />
                   </div>
