@@ -27,9 +27,11 @@ async function comparePasswords(supplied: string, stored: string) {
   }
 }
 
+const SESSION_SECRET = `mlm_platform_session_9x8j2k4m`!
+
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: SESSION_SECRET;
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
