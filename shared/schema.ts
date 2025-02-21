@@ -6,8 +6,8 @@ const userSchema = new Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   fullName: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  phone: { type: String, default: null },
   state: { type: String, required: true },
   isAdmin: { type: Boolean, default: false },
   referrer: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -16,7 +16,6 @@ const userSchema = new Schema({
   avatarUrl: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
-
 
 // Transaction Schema
 const transactionSchema = new Schema({
@@ -51,13 +50,12 @@ export const insertUserSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   fullName: z.string(),
   email: z.string().email("Invalid email address"),
-  phone: z.string().min(1, "Phone number is required"), // now required
+  phone: z.string().nullable().optional(),
   state: z.string(),
   referralCode: z.string().optional(),
   referrer: z.string().optional(),
   avatarUrl: z.string().url().optional()
 });
-
 
 export const insertTransactionSchema = z.object({
   userId: z.string(),

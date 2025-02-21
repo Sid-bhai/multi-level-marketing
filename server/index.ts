@@ -2,12 +2,32 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { connectDB } from './db';
+import path from "path";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Logging middleware
+// CORS setup for Vercel deployment
+app.use((req, res, next) => {
+  const allowedOrigins = ['https://' + process.env.VERCEL_URL];
+  const origin = req.headers.origin;
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  next();
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -38,35 +58,43 @@ app.use((req, res, next) => {
   next();
 });
 
-// Connect to MongoDB before starting the server
-const startServer = async () => {
-  try {
-    await connectDB();
+(async () => {
+  await connectDB();
+  const server = await registerRoutes(app);
 
-    const server = await registerRoutes(app);
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
 
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
+    res.status(status).json({ message });
+    throw err;
+  });
 
-      res.status(status).json({ message });
-      throw err;
+  // Serve static files in production
+  if (process.env.NODE_ENV === "production") {
+    // Serve static files from the correct dist/public directory
+    const distPath = path.join(process.cwd(), "dist", "public");
+    app.use(express.static(distPath));
+
+    // Serve index.html for all non-API routes in production
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api")) {
+        next();
+      } else {
+        res.sendFile(path.join(distPath, "index.html"));
+      }
     });
-
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
-
-    const PORT = 5000;
-    server.listen(PORT, "0.0.0.0", () => {
-      log(`serving on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+  } else {
+    // Development setup with Vite
+    await setupVite(app, server);
   }
-};
 
-startServer();
+  const port = process.env.PORT || 5000;
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    log(`serving on port ${port}`);
+  });
+})();
