@@ -5,31 +5,30 @@
       "src": "package.json",
       "use": "@vercel/node",
       "config": {
-        "buildCommand": "npm run build"
+        "buildCommand": "npm run build",
+        "outputDirectory": "dist"
       }
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "dist/index.js"
+      "dest": "/dist/index.js"
     },
     {
       "src": "/assets/(.*)",
-      "dest": "dist/public/assets/$1",
+      "dest": "/dist/public/assets/$1",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
       }
     },
     {
-      "handle": "filesystem"
+      "src": "/(.*\\.js|.*\\.css|.*\\.png|.*\\.svg|.*\\.jpg|.*\\.ico)",
+      "dest": "/dist/public/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "dist/public/index.html",
-      "headers": {
-        "content-type": "text/html; charset=utf-8"
-      }
+      "dest": "/dist/public/index.html"
     }
   ]
 }

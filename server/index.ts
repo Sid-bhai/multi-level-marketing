@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
-import { storage } from "./storage";
+import { connectDB } from './db';
 
 const app = express();
 app.use(express.json());
@@ -10,7 +10,11 @@ app.use(express.urlencoded({ extended: false }));
 
 // CORS setup for Vercel deployment
 app.use((req, res, next) => {
-  const allowedOrigins = ['https://' + process.env.VERCEL_URL];
+  const allowedOrigins = [
+    'https://' + process.env.VERCEL_URL,
+    process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : undefined
+  ].filter(Boolean) as string[];
+
   const origin = req.headers.origin;
 
   if (origin && allowedOrigins.includes(origin)) {
@@ -28,7 +32,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add request logging middleware
+// Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -62,11 +66,7 @@ app.use((req, res, next) => {
 (async () => {
   try {
     // Check database connection
-    const isConnected = await storage.checkConnection();
-    if (!isConnected) {
-      throw new Error('Unable to connect to the database');
-    }
-    log('Successfully connected to the database');
+    await connectDB();
 
     const server = await registerRoutes(app);
 
@@ -74,27 +74,26 @@ app.use((req, res, next) => {
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
-
       console.error('Error:', err);
       res.status(status).json({ message });
     });
 
-    // Serve static files in production
+    // Static file serving and routing
     if (process.env.NODE_ENV === "production") {
-      // Serve static files from the correct dist/public directory
       const distPath = path.join(process.cwd(), "dist", "public");
+
+      // Serve static files with proper caching
       app.use(express.static(distPath, {
         maxAge: '1y',
-        etag: true
+        etag: true,
+        index: false // Don't serve index.html automatically
       }));
 
-      // Handle all routes in production
+      // Handle all routes
       app.get("*", (req, res, next) => {
-        // API routes should be handled by the API handlers
         if (req.path.startsWith("/api")) {
           next();
         } else {
-          // For non-API routes, serve the index.html
           res.sendFile(path.join(distPath, "index.html"), {
             headers: {
               'Content-Type': 'text/html; charset=utf-8',
@@ -104,7 +103,6 @@ app.use((req, res, next) => {
         }
       });
     } else {
-      // Development setup with Vite
       await setupVite(app, server);
     }
 
@@ -114,7 +112,7 @@ app.use((req, res, next) => {
       host: "0.0.0.0",
       reusePort: true,
     }, () => {
-      log(`serving on port ${port}`);
+      log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${port}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
