@@ -14,9 +14,9 @@ export function DashboardMetrics({ userData }: { userData?: UserData }) {
   }
 
   const metrics = [
-    { title: "Available Balance", value: `$${userData.availableBalance.toFixed(2)}`, icon: DollarSign },
-    { title: "Total Commission", value: `$${userData.totalCommission.toFixed(2)}`, icon: TrendingUp },
-    { title: "Total Payout", value: `$${userData.totalPayout.toFixed(2)}`, icon: Users },
+    { title: "Available Balance", value: `$${userData?.availableBalance?.toFixed(2)}`, icon: DollarSign },
+    { title: "Total Commission", value: `$${userData?.totalCommission?.toFixed(2)}`, icon: TrendingUp },
+    { title: "Total Payout", value: `$${userData?.totalPayout?.toFixed(2)}`, icon: Users },
     { title: "Referral Link", value: userData.referralLink, icon: Link },
   ]
 
