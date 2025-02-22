@@ -94,11 +94,12 @@ export default function WithdrawPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Available Balance</Label>
-              <div className="text-2xl font-bold">${withdrawData?.availableBalance?.toFixed(2)}</div>
+              <div className="text-2xl font-bold">${withdrawData?.availableBalance?.toFixed(2) || "0.00"}</div>
             </div>
             <div className="space-y-2">
               <Label>Pending Withdrawals</Label>
-              <div className="text-xl text-muted-foreground">${withdrawData?.pendingWithdrawals?.toFixed(2)}</div>
+              <div className="text-xl
+              text-muted-foreground">${withdrawData?.pendingWithdrawals?.toFixed(2) || "0.00"}</div>
             </div>
           </CardContent>
         </Card>
