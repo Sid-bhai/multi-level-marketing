@@ -12,13 +12,21 @@ export function DashboardMetrics({ userData }: { userData?: UserData }) {
   if (!userData) {
     return <div>Loading user data...</div>
   }
-
+/*
   const metrics = [
     { title: "Available Balance", value: `$${userData?.availableBalance?.toFixed(2)}`, icon: DollarSign },
     { title: "Total Commission", value: `$${userData?.totalCommission?.toFixed(2)}`, icon: TrendingUp },
     { title: "Total Payout", value: `$${userData?.totalPayout?.toFixed(2)}`, icon: Users },
     { title: "Referral Link", value: userData.referralLink, icon: Link },
   ]
+*/
+
+const metrics = [
+  { title: "Available Balance", value: `$${(userData.availableBalance ?? 0).toFixed(2)}`, icon: DollarSign },
+  { title: "Total Commission", value: `$${(userData.totalCommission ?? 0).toFixed(2)}`, icon: TrendingUp },
+  { title: "Total Payout", value: `$${(userData.totalPayout ?? 0).toFixed(2)}`, icon: Users },
+  { title: "Referral Link", value: userData.referralLink || "N/A", icon: Link },
+]
 
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
