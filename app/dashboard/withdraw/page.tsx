@@ -94,11 +94,11 @@ export default function WithdrawPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Available Balance</Label>
-              <div className="text-2xl font-bold">${withdrawData.availableBalance.toFixed(2)}</div>
+              <div className="text-2xl font-bold">${withdrawData?.availableBalance?.toFixed(2)}</div>
             </div>
             <div className="space-y-2">
               <Label>Pending Withdrawals</Label>
-              <div className="text-xl text-muted-foreground">${withdrawData.pendingWithdrawals.toFixed(2)}</div>
+              <div className="text-xl text-muted-foreground">${withdrawData?.pendingWithdrawals?.toFixed(2)}</div>
             </div>
           </CardContent>
         </Card>
@@ -108,19 +108,19 @@ export default function WithdrawPage() {
             <CardTitle>Bank Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {withdrawData.bankDetails ? (
+            {withdrawData?.bankDetails ? (
               <>
                 <div className="space-y-2">
                   <Label>Account Number</Label>
-                  <Input value={withdrawData.bankDetails.accountNumber} readOnly />
+                  <Input value={withdrawData?.bankDetails?.accountNumber} readOnly />
                 </div>
                 <div className="space-y-2">
                   <Label>Bank Name</Label>
-                  <Input value={withdrawData.bankDetails.bankName} readOnly />
+                  <Input value={withdrawData?.bankDetails?.bankName} readOnly />
                 </div>
                 <div className="space-y-2">
                   <Label>Account Name</Label>
-                  <Input value={withdrawData.bankDetails.accountName} readOnly />
+                  <Input value={withdrawData?.bankDetails?.accountName} readOnly />
                 </div>
               </>
             ) : (
@@ -153,7 +153,7 @@ export default function WithdrawPage() {
               </div>
               <Button
                 type="submit"
-                disabled={!withdrawData.bankDetails || Number.parseFloat(amount) > withdrawData.availableBalance}
+                disabled={!withdrawData?.bankDetails || Number.parseFloat(amount) > withdrawData?.availableBalance}
               >
                 Submit Withdrawal
               </Button>
@@ -164,4 +164,3 @@ export default function WithdrawPage() {
     </div>
   )
 }
-
