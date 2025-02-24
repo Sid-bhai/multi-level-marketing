@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, Users, Wallet, Settings, LogOut, Menu } from "lucide-react"
@@ -59,13 +60,19 @@ export function DashboardHeader() {
       <div className="flex items-center h-16 px-4">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
+            <div className="flex items-center justify-between">
             <Button variant="ghost" size="icon" className="lg:hidden">
               <Menu className="h-6 w-6" />
             </Button>
-          </SheetTrigger>
+             <b className="text-xl font-bold">Dhan dan</b>
+            </div>
+         </SheetTrigger>
           <SheetContent side="left" className="w-64 p-4">
             <div className="flex flex-col h-full">
-              <div className="text-2xl font-bold text-primary mb-8">MLM Platform</div>
+              <div className="flex items-center space-x-3 mb-8"> 
+               <Image src="/logo.png" alt="Logo" width={40} height={40} /> 
+               <span className="text-2xl font-bold">Dhan dan</span>
+              </div>
               <nav className="flex flex-col flex-1 gap-2">
                 <NavLinks />
               </nav>
@@ -74,7 +81,8 @@ export function DashboardHeader() {
         </Sheet>
 
         <div className="hidden lg:flex items-center gap-6 mx-6">
-          <div className="text-2xl font-bold text-primary">MLM Platform</div>
+          <Image src="/logo.png" alt="Logo" width={40} height={40} />
+          <div className="text-2xl font-bold">Dhan dan</div>
           <nav className="flex items-center space-x-4">
             <NavLinks />
           </nav>
